@@ -1,0 +1,20 @@
+{% import '_includes/forms' as forms %}
+
+<p>You'll need to use your application's OAuth2 token, which you can generate in your Settings Dropdown -> API.</p>
+
+{{ forms.textField({
+  label: 'OAuth Token'|t,
+  required: true,
+  name: 'oauthToken',
+  value: settings.oauthToken,
+  errors: settings.getErrors('oauthToken')
+}) }}
+
+{{ forms.selectField({
+  label: 'Default Form'|t,
+  required: true,
+  name: 'defaultForm',
+  value: settings.defaultForm,
+  errors: settings.getErrors('defaultForm'),
+  options: formsoptions
+}) }}
