@@ -7,6 +7,7 @@ class Formstack_FormSubmitController extends BaseController
   public function actionFormstackSubmit()
   {
 
+    // $this->returnJson($_POST);
     // GET REFERER PAGE
     $url = $this->getActionParams()['p'];
     $url = stripslashes($url);
@@ -15,19 +16,29 @@ class Formstack_FormSubmitController extends BaseController
     $this->requirePostRequest();
     // GET OAUTH FROM SETTINGS
     $oauth_token = craft()->plugins->getPlugin('formstack')->getSettings()->oauthToken;
-    // REMOVE UNNECESSARY FIELDS FROM POST VARIABLE FOR SENDING TO FORMSTACK
+    $post_items = array();
     foreach ( $_POST as $key => $value){
-      // if ($key != 'action' || $key != 'redirect' || $key != '_submit' || $key != 'viewkey') {
-        if (strpos($key, '-') != 0){
-          $field_name = substr($key, 0, strpos($key, '-'));
-          $field_subname = substr($key, strpos($key, '-')+1);
-          $post_items[] = $field_name.'['.$field_subname.']' . '=' . $value;
-        }
-        else{
-          $post_items[] = $key . '=' . $value;
-        }
-      // }
+      if (strpos($key, '-') != 0){
+        $field_name = substr($key, 0, strpos($key, '-'));
+        $field_subname = substr($key, strpos($key, '-')+1);
+        $post_items[] = $field_name.'['.$field_subname.']' . '=' . $value;
+      }
+      else{
+        $post_items[] = $key . '=' . $value;
+      }
     }
+    // FILES DATA
+    $data = $field = undefined;
+    foreach ($_FILES as $key => $value) {
+      $field = key((array)$_FILES);
+      $path = $_FILES[$key]['tmp_name'];
+      $name = $_FILES[$key]['name'];
+      $type = mime_content_type($path);
+      $data = file_get_contents($path);
+      $data = $name . ';' . base64_encode($data);
+      $post_items[] = $field . '=' . $data;
+    }
+
     $post_string = implode ('&', $post_items);
 
     // GRAB SPECIFIC FORM ID
