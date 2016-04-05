@@ -7,7 +7,6 @@ class Formstack_FormSubmitController extends BaseController
   public function actionFormstackSubmit()
   {
 
-    // $this->returnJson($_POST);
     // GET REFERER PAGE
     $url = $this->getActionParams()['p'];
     $url = stripslashes($url);
@@ -21,10 +20,10 @@ class Formstack_FormSubmitController extends BaseController
       if (strpos($key, '-') != 0){
         $field_name = substr($key, 0, strpos($key, '-'));
         $field_subname = substr($key, strpos($key, '-')+1);
-        $post_items[] = $field_name.'['.$field_subname.']' . '=' . $value;
+        $post_items[$field_name.'['.$field_subname.']'] = $value;
       }
       else{
-        $post_items[] = $key . '=' . $value;
+        $post_items[$key] = $value;
       }
     }
     // FILES DATA
@@ -36,23 +35,18 @@ class Formstack_FormSubmitController extends BaseController
       $type = mime_content_type($path);
       $data = file_get_contents($path);
       $data = $name . ';' . base64_encode($data);
-      $post_items[] = $field . '=' . $data;
+      $post_items[$field] = $data;
     }
-
-    $post_string = implode ('&', $post_items);
 
     // GRAB SPECIFIC FORM ID
     $form_id = $_POST['form'];
     // DEFINE WHERE TO SEND THE POST REQUEST
-    $post_url = 'https://www.formstack.com/api/v2/form/'.$form_id.'/submission.json?oauth_token='.$oauth_token;
+    $post_url = 'https://www.formstack.com/api/v2/form/'.$form_id.'/submission.json';
 
-    $curl_connection = curl_init($post_url);
-    curl_setopt($curl_connection, CURLOPT_CONNECTTIMEOUT, 30);
-    curl_setopt($curl_connection, CURLOPT_SSL_VERIFYPEER, false);
-    curl_setopt($curl_connection, CURLOPT_USERAGENT, $_SERVER['HTTP_USER_AGENT']);
-    curl_setopt($curl_connection, CURLOPT_POSTFIELDS, $post_string);
-    curl_setopt($curl_connection, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($curl_connection, CURLINFO_HEADER_OUT, true);
+    $curl_connection = curl_init();
+    curl_setopt($curl_connection, CURLOPT_URL, $post_url);
+    curl_setopt($curl_connection, CURLOPT_HTTPHEADER, array('Authorization: Bearer '.$oauth_token));
+    curl_setopt($curl_connection, CURLOPT_POSTFIELDS, $post_items);
 
     $result = curl_exec($curl_connection);
 
